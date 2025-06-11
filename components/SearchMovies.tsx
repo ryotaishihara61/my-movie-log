@@ -2,7 +2,6 @@
 
 "use client";
 
-// useRouterとuseSearchParamsをインポート
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -19,25 +18,18 @@ const sortOptions = [
 ];
 
 export default function SearchMovies() {
-  // Next.jsのルーターとURLパラメータを扱うフック
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 検索条件の状態
   const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState(sortOptions[0].value);
-
-  // 検索結果とローディングの状態
   const [results, setResults] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
-  
-  // ページネーション用の状態
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalResults, setTotalResults] = useState(0);
 
-  // ジャンル一覧の取得
   useEffect(() => {
     const fetchGenres = async () => {
       const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
@@ -51,7 +43,6 @@ export default function SearchMovies() {
     fetchGenres();
   }, []);
 
-  // ▼▼▼▼▼ ページ読み込み時にURLから検索条件を復元する処理 ▼▼▼▼▼
   useEffect(() => {
     const genresFromUrl = searchParams.get('genres');
     const sortByFromUrl = searchParams.get('sort');
@@ -62,12 +53,11 @@ export default function SearchMovies() {
     setSelectedGenres(newSelectedGenres);
     setSortBy(newSortBy);
 
-    // URLに検索条件がある場合のみ、検索を実行
     if (newSelectedGenres.length > 0) {
       handleSearch(1, newSelectedGenres, newSortBy);
     }
-  }, []); // このuseEffectは初回マウント時に一度だけ実行される
-  // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleGenreToggle = (genreId: number) => {
     setSelectedGenres((prevSelected) =>
@@ -77,10 +67,10 @@ export default function SearchMovies() {
     );
   };
 
-  // ▼▼▼▼▼ 検索処理にURL更新機能を追加 ▼▼▼▼▼
   const handleSearch = async (page = 1, currentGenres = selectedGenres, currentSort = sortBy) => {
     if (currentGenres.length === 0) {
-      alert('ジャンルを一つ以上選択してください。');
+      // 検索ボタンを押した時のみアラートを出す
+      if (page === 1) alert('ジャンルを一つ以上選択してください。');
       return;
     }
 
@@ -89,12 +79,13 @@ export default function SearchMovies() {
       setResults([]);
     }
 
-    // URLのクエリパラメータを組み立てる
     const params = new URLSearchParams();
     params.set('genres', currentGenres.join(','));
     params.set('sort', currentSort);
-    // URLを書き換える（ページ遷移はしない）
-    router.push(`/?${params.toString()}`);
+    
+    // ▼▼▼▼▼ ここに { scroll: false } を追加します ▼▼▼▼▼
+    router.push(`/?${params.toString()}`, { scroll: false });
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
     const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
     const url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${currentGenres.join(',')}&language=ja-JP&sort_by=${currentSort}&page=${page}`;
@@ -123,7 +114,6 @@ export default function SearchMovies() {
         映画を絞り込み検索
       </h1>
       
-      {/* ジャンル選択 */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2">ジャンルを選択</h3>
         <div className="flex flex-wrap gap-2">
@@ -135,7 +125,6 @@ export default function SearchMovies() {
         </div>
       </div>
       
-      {/* 並び順の選択 */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2">並び順</h3>
         <div className="flex flex-wrap gap-x-4 gap-y-2">
@@ -148,14 +137,12 @@ export default function SearchMovies() {
         </div>
       </div>
       
-      {/* 検索実行ボタン */}
       <div className="my-4">
         <button onClick={() => handleSearch(1)} disabled={isLoading && currentPage === 1} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400">
           {isLoading && currentPage === 1 ? '検索中...' : 'この条件で検索'}
         </button>
       </div>
 
-      {/* 検索結果 (変更なし) */}
       {totalResults > 0 && ( <h3 className="text-lg mb-4">検索結果： 約 {totalResults} 件</h3> )}
       {results.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
