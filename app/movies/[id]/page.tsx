@@ -4,25 +4,9 @@ import { supabase } from "@/lib/supabase";
 import LogEditor from "@/components/LogEditor";
 import BackButton from "@/components/BackButton";
 
-// TMDbの映画詳細データの型
-type MovieDetails = {
-  id: number;
-  title: string;
-  overview: string;
-  poster_path: string;
-  release_date: string;
-};
-
-// Supabaseのログデータの型
-type MyLog = {
-  id: number;
-  status: string;
-  rating: number | null;
-  comment: string | null;
-  watched_date: string | null;
-};
-
-// TMDbから映画詳細を取得する関数
+// (型定義やgetMovieDetails, getMyLog関数は変更ありません)
+type MovieDetails = { id: number; title: string; overview: string; poster_path: string; release_date: string; };
+type MyLog = { id: number; status: string; rating: number | null; comment: string | null; watched_date: string | null; };
 async function getMovieDetails(id: string): Promise<MovieDetails | null> {
   const apiKey = process.env.TMDB_API_KEY;
   const url = `https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=ja-JP`;
@@ -35,15 +19,8 @@ async function getMovieDetails(id: string): Promise<MovieDetails | null> {
     return null;
   }
 }
-
-// Supabaseから自分のログを取得する関数
 async function getMyLog(movieId: number): Promise<MyLog | null> {
-  const { data, error } = await supabase
-    .from("movie")
-    .select("id, status, rating, comment, watched_date")
-    .eq("id", movieId)
-    .single();
-
+  const { data, error } = await supabase.from("movie").select("id, status, rating, comment, watched_date").eq("id", movieId).single();
   if (error && error.code !== 'PGRST116') {
     console.error("ログの取得エラー:", error);
     return null;
@@ -51,11 +28,16 @@ async function getMyLog(movieId: number): Promise<MyLog | null> {
   return data;
 }
 
-export default async function MovieDetailPage({ params: { id } }: { params: { id: string } }) {
+// ▼▼▼▼▼ ここの関数の引数の書き方を変更します ▼▼▼▼▼
+export default async function MovieDetailPage({ params }: { params: { id: string } }) {
+  const id = params.id; // idをここで取り出す形に変更
+
+  // 両方のデータを並行して取得
   const [movie, myLog] = await Promise.all([
     getMovieDetails(id),
     getMyLog(Number(id)),
   ]);
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
   if (!movie) {
     return <div className="p-4">映画が見つかりませんでした。</div>;
