@@ -1,5 +1,7 @@
 // app/page.tsx
 
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import SearchMovies from '@/components/SearchMovies';
