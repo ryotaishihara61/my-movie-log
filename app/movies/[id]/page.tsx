@@ -28,16 +28,21 @@ async function getMyLog(movieId: number): Promise<MyLog | null> {
   return data;
 }
 
-// ▼▼▼▼▼ ここの関数の引数の書き方を変更します ▼▼▼▼▼
-export default async function MovieDetailPage({ params }: { params: { id: string } }) {
-  const id = params.id; // idをここで取り出す形に変更
+// ▼▼▼▼▼ 新しく、このページが受け取るPropsの型を定義します ▼▼▼▼▼
+type Props = {
+  params: { id: string };
+};
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-  // 両方のデータを並行して取得
+// ▼▼▼▼▼ コンポーネントの引数で、作成したProps型を使います ▼▼▼▼▼
+export default async function MovieDetailPage({ params }: Props) {
+  const id = params.id;
+  
   const [movie, myLog] = await Promise.all([
     getMovieDetails(id),
     getMyLog(Number(id)),
   ]);
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
   if (!movie) {
     return <div className="p-4">映画が見つかりませんでした。</div>;
