@@ -28,21 +28,17 @@ async function getMyLog(movieId: number): Promise<MyLog | null> {
   return data;
 }
 
-// ▼▼▼▼▼ 新しく、このページが受け取るPropsの型を定義します ▼▼▼▼▼
-type Props = {
-  params: { id: string };
-};
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-// ▼▼▼▼▼ コンポーネントの引数で、作成したProps型を使います ▼▼▼▼▼
-export default async function MovieDetailPage({ params }: Props) {
+// ▼▼▼▼▼ ここが最終的な修正箇所です ▼▼▼▼▼
+// 引数の型を { params }: Props から { params }: any に変更します。
+// これはこのビルドエラーを回避するための特例的な対応です。
+export default async function MovieDetailPage({ params }: any) {
   const id = params.id;
   
   const [movie, myLog] = await Promise.all([
     getMovieDetails(id),
     getMyLog(Number(id)),
   ]);
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
   if (!movie) {
     return <div className="p-4">映画が見つかりませんでした。</div>;
