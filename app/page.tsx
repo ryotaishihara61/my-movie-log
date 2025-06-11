@@ -84,10 +84,12 @@ export default async function HomePage() {
       </Suspense>
 
       {/* 「観たい」リストのセクション */}
+      {/*
       <h1 className="text-2xl font-bold mb-4 border-l-4 border-blue-500 pl-3">
         観たいリスト
       </h1>
       <Watchlist initialWatchlist={watchlist} />
+      */}
 
       {/* 「視聴済み」リストのセクション */}
       <h1 className="text-2xl font-bold mb-4 border-l-4 border-purple-500 pl-3">
