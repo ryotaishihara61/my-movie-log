@@ -1,20 +1,19 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+// app/layout.tsx
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+import type { Metadata } from 'next';
+// ▼▼▼▼▼ 読み込むフォントを 'Inter' に変更します ▼▼▼▼▼
+import { Inter } from 'next/font/google';
+import './globals.css';
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// ▼▼▼▼▼ フォントの設定を 'Inter' に変更します ▼▼▼▼▼
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "My movie curator",
-  description: "映画鑑賞記録・データベース",
+  title: {
+    template: '%s | My Movie Log',
+    default: 'My Movie Log',
+  },
+  description: 'あなただけの映画鑑賞記録・データベース',
 };
 
 export default function RootLayout({
@@ -24,11 +23,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+      {/* ▼▼▼▼▼ classNameをinter.classNameに変更します ▼▼▼▼▼ */}
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
