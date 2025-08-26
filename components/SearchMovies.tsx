@@ -80,7 +80,7 @@ export default function SearchMovies({ allMyLogs }: Props) {
     }
     if (currentGenres.length > 0) params.set('genres', currentGenres.join(','));
     if (!currentQuery) params.set('sort', currentSort);
-    router.push(`/?${params.toString()}`, { scroll: false });
+    router.push(`/search?${params.toString()}`, { scroll: false });
     try {
       if (currentQuery) {
         if (currentSearchType === 'person') {
@@ -183,64 +183,115 @@ export default function SearchMovies({ allMyLogs }: Props) {
   }, []);
 
   return (
-    <div className="mb-12">
-      <h1 className="text-2xl font-bold mb-4 border-l-4 border-green-500 pl-3">
-        映画を絞り込み検索
-      </h1>
+    <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2">検索タイプ</h3>
-        <div className="flex gap-4 mb-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input 
-              type="radio" 
-              name="search-type" 
-              value="movie" 
-              checked={searchType === 'movie'} 
-              onChange={(e) => setSearchType(e.target.value as 'movie' | 'person')} 
-              className="w-4 h-4" 
-            />
-            映画・タイトル
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input 
-              type="radio" 
-              name="search-type" 
-              value="person" 
-              checked={searchType === 'person'} 
-              onChange={(e) => setSearchType(e.target.value as 'movie' | 'person')} 
-              className="w-4 h-4" 
-            />
-            俳優・監督名
-          </label>
-        </div>
-        <h3 className="text-lg font-semibold mb-2">キーワード</h3>
-        <input 
-          type="text" 
-          value={query} 
-          onChange={(e) => setQuery(e.target.value)} 
-          placeholder={searchType === 'movie' ? '映画のタイトル、あらすじ...' : '俳優名、監督名...'} 
-          className="w-full bg-gray-800 text-white rounded-lg px-4 py-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-        />
-      </div>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2">ジャンル</h3>
-        <div className="flex flex-wrap gap-2">
-          {genres.map((genre) => ( <button key={genre.id} onClick={() => handleGenreToggle(genre.id)} className={`text-sm rounded-full px-3 py-1 transition-colors ${selectedGenres.includes(genre.id) ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-white'}`}>{genre.name}</button>))}
+        <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-600/30">
+          <h3 className="text-lg font-semibold mb-4 text-green-400">検索タイプ</h3>
+          <div className="flex gap-6 mb-6">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input 
+                type="radio" 
+                name="search-type" 
+                value="movie" 
+                checked={searchType === 'movie'} 
+                onChange={(e) => setSearchType(e.target.value as 'movie' | 'person')} 
+                className="w-4 h-4 text-green-500" 
+              />
+              <span className="group-hover:text-green-400 transition-colors">映画・タイトル</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input 
+                type="radio" 
+                name="search-type" 
+                value="person" 
+                checked={searchType === 'person'} 
+                onChange={(e) => setSearchType(e.target.value as 'movie' | 'person')} 
+                className="w-4 h-4 text-green-500" 
+              />
+              <span className="group-hover:text-green-400 transition-colors">俳優・監督名</span>
+            </label>
+          </div>
+          <h3 className="text-lg font-semibold mb-3 text-green-400">キーワード</h3>
+          <input 
+            type="text" 
+            value={query} 
+            onChange={(e) => setQuery(e.target.value)} 
+            placeholder={searchType === 'movie' ? '映画のタイトル、あらすじ...' : '俳優名、監督名...'} 
+            className="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors" 
+          />
         </div>
       </div>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2">並び順 <span className="text-xs text-gray-400">（キーワード検索時は無効）</span></h3>
-        <div className="flex flex-wrap gap-x-4 gap-y-2">
-          {sortOptions.map((option) => ( <label key={option.value} className="flex items-center gap-2 cursor-pointer"><input type="radio" name="sort-by" value={option.value} checked={sortBy === option.value} onChange={(e) => setSortBy(e.target.value)} className="w-4 h-4" disabled={!!query} />{option.label}</label>))}
+      <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-600/30 mb-6">
+        <h3 className="text-lg font-semibold mb-4 text-green-400">ジャンル</h3>
+        <div className="flex flex-wrap gap-3">
+          {genres.map((genre) => ( 
+            <button 
+              key={genre.id} 
+              onClick={() => handleGenreToggle(genre.id)} 
+              className={`text-sm rounded-full px-4 py-2 font-medium transition-all duration-200 transform hover:scale-105 ${
+                selectedGenres.includes(genre.id) 
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30' 
+                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
+              }`}
+            >
+              {genre.name}
+            </button>
+          ))}
         </div>
       </div>
-      <div className="my-4">
-        <button onClick={() => handleSearch(1)} disabled={isLoading && currentPage === 1} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400">
-          {isLoading && currentPage === 1 ? '検索中...' : 'この条件で検索'}
+      <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-600/30 mb-6">
+        <h3 className="text-lg font-semibold mb-3 text-green-400">
+          並び順 
+          <span className="text-xs text-gray-400 font-normal ml-2">（キーワード検索時は無効）</span>
+        </h3>
+        <div className="flex flex-wrap gap-4">
+          {sortOptions.map((option) => ( 
+            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+              <input 
+                type="radio" 
+                name="sort-by" 
+                value={option.value} 
+                checked={sortBy === option.value} 
+                onChange={(e) => setSortBy(e.target.value)} 
+                className="w-4 h-4 text-green-500" 
+                disabled={!!query} 
+              />
+              <span className={`group-hover:text-green-400 transition-colors ${
+                !!query ? 'text-gray-500' : 'text-gray-300'
+              }`}>
+                {option.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className="text-center mb-8">
+        <button 
+          onClick={() => handleSearch(1)} 
+          disabled={isLoading && currentPage === 1} 
+          className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-green-500/30"
+        >
+          {isLoading && currentPage === 1 ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              検索中...
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span>🔍</span>
+              この条件で検索
+            </div>
+          )}
         </button>
       </div>
 
-      {totalResults > 0 && ( <h3 className="text-lg mb-4">検索結果： 約 {totalResults} 件</h3> )}
+      {totalResults > 0 && ( 
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
+          <h3 className="text-lg font-semibold text-green-400">
+            検索結果：約 <span className="text-2xl">{totalResults}</span> 件
+          </h3>
+        </div>
+      )}
       {results.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {/* ▼▼▼▼▼ 検索結果の表示部分を修正 ▼▼▼▼▼ */}
@@ -267,9 +318,20 @@ export default function SearchMovies({ allMyLogs }: Props) {
         </div>
       )}
       
-      {isLoading && <p className="text-center mt-8">読み込み中...</p>}
+      {isLoading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+        </div>
+      )}
       {results.length > 0 && currentPage < totalPages && !isLoading && (
-        <div className="text-center mt-8"><button onClick={handleLoadMore} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">もっと見る</button></div>
+        <div className="text-center mt-12">
+          <button 
+            onClick={handleLoadMore} 
+            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105"
+          >
+            もっと見る
+          </button>
+        </div>
       )}
     </div>
   );

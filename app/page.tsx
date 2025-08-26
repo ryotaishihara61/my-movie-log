@@ -1,80 +1,57 @@
 // app/page.tsx
 
-export const dynamic = 'force-dynamic';
-
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
-import SearchMovies from '@/components/SearchMovies';
-import { Suspense } from 'react';
 
-// 型定義
-type MyLogItem = {
-  id: number;
-  title: string;
-  poster_path: string | null;
-  status: string;
-};
-
-// 全ログを取得する関数
-async function getAllMyLogs(): Promise<MyLogItem[]> {
-  const { data, error } = await supabase
-    .from('movie')
-    .select('id, title, poster_path, status')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('全ログの取得に失敗しました:', error);
-    return [];
-  }
-  return data || [];
-}
-
-// メインのページコンポーネント
-export default async function HomePage() {
-  const allMyLogs = await getAllMyLogs();
-
-  // ポスターにタグをつけるためのMapを作成
-  const logStatusMap = new Map<number, string>();
-  for (const log of allMyLogs) {
-    logStatusMap.set(log.id, log.status);
-  }
-
+// ホームページコンポーネント
+export default function HomePage() {
   return (
-    <main className="container mx-auto p-4">
-      <Suspense fallback={<div className="mb-12"><p>検索フォームを読み込み中...</p></div>}>
-        <SearchMovies allMyLogs={logStatusMap} />
-      </Suspense>
-
-      <h1 className="text-2xl font-bold mb-4 border-l-4 border-blue-500 pl-3">
-        マイリスト
-      </h1>
-      {allMyLogs && allMyLogs.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-12">
-          {allMyLogs.map((movie) => (
-            <div key={movie.id} className="relative">
-              <Link href={`/movies/${movie.id}`} className="block">
-                <div>
-                  {movie.poster_path ? (
-                    <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="rounded-lg shadow-md" />
-                  ) : (
-                    <div className="bg-gray-700 aspect-[2/3] w-full rounded-lg flex items-center justify-center">
-                      <p className="text-xs text-gray-400">画像なし</p>
-                    </div>
-                  )}
-                  <h2 className="text-sm mt-2 truncate">{movie.title}</h2>
-                </div>
-              </Link>
-              <div className={`absolute top-2 left-2 text-xs text-white font-bold py-1 px-2 rounded ${
-                movie.status === 'watched' ? 'bg-purple-600' : 'bg-blue-600'
-              }`}>
-                {movie.status === 'watched' ? '視聴済み' : '観たい'}
+    <div className="container mx-auto px-4 py-12">
+      <div className="text-center py-16">
+        <div className="mb-12">
+          <div className="text-8xl mb-6">🎬</div>
+          <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+            My Movie Log
+          </h1>
+          <p className="text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            映画の記録と発見をサポートする<br />
+            あなただけのシネマダイアリー
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <Link href="/search" className="group transform hover:scale-105 transition-all duration-300">
+            <div className="bg-gradient-to-br from-green-600/20 to-green-800/20 p-10 rounded-2xl border border-green-500/30 hover:border-green-400/50 backdrop-blur-sm shadow-xl hover:shadow-green-500/20">
+              <div className="text-green-400 text-6xl mb-6 group-hover:animate-pulse">🔍</div>
+              <h2 className="text-3xl font-bold mb-4 group-hover:text-green-400 transition-colors">
+                映画を検索
+              </h2>
+              <p className="text-gray-300 text-lg leading-relaxed">
+                タイトル、俳優名、監督名で映画を検索。<br />
+                新しい映画との出会いを見つけよう
+              </p>
+              <div className="mt-6 inline-flex items-center text-green-400 font-semibold group-hover:translate-x-2 transition-transform">
+                検索を始める →
               </div>
             </div>
-          ))}
+          </Link>
+          
+          <Link href="/mylist" className="group transform hover:scale-105 transition-all duration-300">
+            <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 p-10 rounded-2xl border border-blue-500/30 hover:border-blue-400/50 backdrop-blur-sm shadow-xl hover:shadow-blue-500/20">
+              <div className="text-blue-400 text-6xl mb-6 group-hover:animate-pulse">📚</div>
+              <h2 className="text-3xl font-bold mb-4 group-hover:text-blue-400 transition-colors">
+                マイリスト
+              </h2>
+              <p className="text-gray-300 text-lg leading-relaxed">
+                観たい映画と視聴済みの映画を管理。<br />
+                あなたのシネマライフを記録しよう
+              </p>
+              <div className="mt-6 inline-flex items-center text-blue-400 font-semibold group-hover:translate-x-2 transition-transform">
+                リストを見る →
+              </div>
+            </div>
+          </Link>
         </div>
-      ) : (
-        <p className="mb-12 text-gray-400">マイリストに映画がありません。</p>
-      )}
-    </main>
+      </div>
+    </div>
   );
 }
