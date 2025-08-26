@@ -110,7 +110,8 @@ export default async function HomePage() {
       {/* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */}
       
 
-      {/* 人気の映画セクション */}
+      {/* 人気の映画セクション - 非表示 */}
+      {/* 
       <h1 className="text-2xl font-bold mb-4 border-l-4 border-yellow-500 pl-3">
         人気の映画
       </h1>
@@ -140,6 +141,7 @@ export default async function HomePage() {
       ) : (
         <p>人気の映画情報を取得できませんでした。</p>
       )}
+      */
     </main>
   );
 }
