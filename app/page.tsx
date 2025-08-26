@@ -59,10 +59,7 @@ async function getAllMyLogs(): Promise<MyLogItem[]> {
 // メインのページコンポーネント
 export default async function HomePage() {
   // ▼▼▼▼▼ 取得するデータを変更 ▼▼▼▼▼
-  const [popularMovies, allMyLogs] = await Promise.all([
-    getPopularMovies(),
-    getAllMyLogs(),
-  ]);
+  const allMyLogs = await getAllMyLogs();
 
   // ポスターにタグをつけるためのMapを作成
   const logStatusMap = new Map<number, string>();
