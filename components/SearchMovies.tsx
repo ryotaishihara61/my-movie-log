@@ -37,6 +37,7 @@ export default function SearchMovies({ allMyLogs }: Props) {
   const [totalPages, setTotalPages] = useState(0);
   const [totalResults, setTotalResults] = useState(0);
   const [lastSearch, setLastSearch] = useState({ type: '', value: '' });
+  const [searchType, setSearchType] = useState<'movie' | 'person'>('movie');
 
   // (useEffect, handleGenreToggle, handleSearch, handleLoadMore は変更ありません)
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function SearchMovies({ allMyLogs }: Props) {
     );
   };
   
-  const handleSearch = async (page = 1, currentQuery = query, currentGenres = selectedGenres, currentSort = sortBy) => {
+  const handleSearch = async (page = 1, currentQuery = query, currentGenres = selectedGenres, currentSort = sortBy, currentSearchType = searchType) => {
     if (!currentQuery && currentGenres.length === 0) {
       if (page === 1) alert('キーワードを入力するか、ジャンルを一つ以上選択してください。');
       return;
@@ -73,22 +74,71 @@ export default function SearchMovies({ allMyLogs }: Props) {
     let apiTotalPages = 0;
     let apiTotalResults = 0;
     const params = new URLSearchParams();
-    if (currentQuery) params.set('query', currentQuery);
+    if (currentQuery) {
+      params.set('query', currentQuery);
+      params.set('searchType', currentSearchType);
+    }
     if (currentGenres.length > 0) params.set('genres', currentGenres.join(','));
     if (!currentQuery) params.set('sort', currentSort);
     router.push(`/?${params.toString()}`, { scroll: false });
     try {
       if (currentQuery) {
-        setLastSearch({ type: 'keyword', value: currentQuery });
-        url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(currentQuery)}&language=ja-JP&page=${page}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        const filtered = currentGenres.length > 0
-          ? data.results.filter((movie: Movie) => currentGenres.every(genreId => movie.genre_ids.includes(genreId)))
-          : data.results;
-        finalResults = filtered;
-        apiTotalPages = data.total_pages;
-        apiTotalResults = data.total_results;
+        if (currentSearchType === 'person') {
+          // 人物検索の場合
+          setLastSearch({ type: 'person', value: currentQuery });
+          // まず人物を検索
+          const personUrl = `https://api.themoviedb.org/3/search/person?api_key=${apiKey}&query=${encodeURIComponent(currentQuery)}&language=ja-JP&page=1`;
+          const personRes = await fetch(personUrl);
+          const personData = await personRes.json();
+          
+          if (personData.results && personData.results.length > 0) {
+            // 各人物について映画を取得
+            const allMovies: Movie[] = [];
+            const movieIds = new Set<number>();
+            
+            for (const person of personData.results.slice(0, 5)) { // 最初の5人まで検索
+              const creditsUrl = `https://api.themoviedb.org/3/person/${person.id}/movie_credits?api_key=${apiKey}&language=ja-JP`;
+              const creditsRes = await fetch(creditsUrl);
+              const creditsData = await creditsRes.json();
+              
+              // キャストと監督の映画を結合
+              const movies = [...(creditsData.cast || []), ...(creditsData.crew || []).filter((c: any) => c.job === 'Director')];
+              
+              movies.forEach((movie: any) => {
+                if (!movieIds.has(movie.id) && movie.poster_path) {
+                  movieIds.add(movie.id);
+                  allMovies.push({
+                    id: movie.id,
+                    title: movie.title,
+                    poster_path: movie.poster_path,
+                    genre_ids: movie.genre_ids || []
+                  });
+                }
+              });
+            }
+            
+            // 重複を除去し、日付順にソート
+            finalResults = allMovies
+              .filter((movie, index, self) => self.findIndex(m => m.id === movie.id) === index)
+              .sort((a, b) => b.id - a.id) // IDが大きいほど新しい映画
+              .slice((page - 1) * 20, page * 20); // ページネーション
+            
+            apiTotalPages = Math.ceil(allMovies.length / 20);
+            apiTotalResults = allMovies.length;
+          }
+        } else {
+          // 映画検索の場合（既存の処理）
+          setLastSearch({ type: 'keyword', value: currentQuery });
+          url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(currentQuery)}&language=ja-JP&page=${page}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          const filtered = currentGenres.length > 0
+            ? data.results.filter((movie: Movie) => currentGenres.every(genreId => movie.genre_ids.includes(genreId)))
+            : data.results;
+          finalResults = filtered;
+          apiTotalPages = data.total_pages;
+          apiTotalResults = data.total_results;
+        }
       } 
       else if (currentGenres.length > 0) {
         setLastSearch({ type: 'genre', value: currentGenres.join(',') });
@@ -119,14 +169,16 @@ export default function SearchMovies({ allMyLogs }: Props) {
     const genresFromUrl = searchParams.get('genres');
     const sortByFromUrl = searchParams.get('sort');
     const queryFromUrl = searchParams.get('query');
+    const searchTypeFromUrl = searchParams.get('searchType') as 'movie' | 'person' || 'movie';
     const newSelectedGenres = genresFromUrl ? genresFromUrl.split(',').map(Number) : [];
     const newSortBy = sortByFromUrl || sortOptions[0].value;
     const newQuery = queryFromUrl || '';
     setSelectedGenres(newSelectedGenres);
     setSortBy(newSortBy);
     setQuery(newQuery);
+    setSearchType(searchTypeFromUrl);
     if (newQuery || newSelectedGenres.length > 0) {
-      handleSearch(1, newQuery, newSelectedGenres, newSortBy);
+      handleSearch(1, newQuery, newSelectedGenres, newSortBy, searchTypeFromUrl);
     }
   }, []);
 
@@ -136,8 +188,39 @@ export default function SearchMovies({ allMyLogs }: Props) {
         映画を絞り込み検索
       </h1>
       <div className="mb-4">
+        <h3 className="text-lg font-semibold mb-2">検索タイプ</h3>
+        <div className="flex gap-4 mb-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input 
+              type="radio" 
+              name="search-type" 
+              value="movie" 
+              checked={searchType === 'movie'} 
+              onChange={(e) => setSearchType(e.target.value as 'movie' | 'person')} 
+              className="w-4 h-4" 
+            />
+            映画・タイトル
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input 
+              type="radio" 
+              name="search-type" 
+              value="person" 
+              checked={searchType === 'person'} 
+              onChange={(e) => setSearchType(e.target.value as 'movie' | 'person')} 
+              className="w-4 h-4" 
+            />
+            俳優・監督名
+          </label>
+        </div>
         <h3 className="text-lg font-semibold mb-2">キーワード</h3>
-        <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="映画のタイトル、あらすじ..." className="w-full bg-gray-800 text-white rounded-lg px-4 py-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input 
+          type="text" 
+          value={query} 
+          onChange={(e) => setQuery(e.target.value)} 
+          placeholder={searchType === 'movie' ? '映画のタイトル、あらすじ...' : '俳優名、監督名...'} 
+          className="w-full bg-gray-800 text-white rounded-lg px-4 py-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+        />
       </div>
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2">ジャンル</h3>
